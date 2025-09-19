@@ -1,0 +1,51 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ktta-server
+    depends_on:
+      - ktta-database
+    ports:
+      - ${SPRING_PORT}:${SPRING_PORT}
+    restart: "always"
+    networks:
+      - ktta-bridge
+
+  ktta-database:
+    image: mysql:9.0.0
+    container_name: ktta-database
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    command:
+      --port=${DB_PORT} --max_allowed_packet=32M
+    expose:
+      - ${DB_PORT}
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    restart: "always"
+    volumes:
+      - ktta-database:/var/lib/mysql
+
+  ktta-redis:
+    image: redis:latest
+    container_name: ktta-redis
+    command: --port ${REDIS_PORT}
+    expose:
+      - ${REDIS_PORT}
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+    volumes:
+      - ktta-redis:/data
+    restart: "always"
+
+volumes:
+  ktta-database:
+  ktta-redis:
+
+networks:
+  ktta-bridge:
+    driver: bridge
